@@ -1,10 +1,14 @@
 package com.esisman.fileupload.service;
 
 import com.esisman.fileupload.entity.File;
+import com.esisman.fileupload.exception.FileConflictException;
+import com.esisman.fileupload.exception.FileSizeLimitExceedException;
+import com.esisman.fileupload.exception.FileTypeNotSupportedException;
+import com.esisman.fileupload.exception.NoContentException;
+import com.esisman.fileupload.mapper.response.FileResponseMapper;
+import com.esisman.fileupload.model.FileResponseModel;
 import com.esisman.fileupload.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,15 +20,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileStorageService {
     private final FileRepository fileRepository;
+    private final FileResponseMapper fileResponseMapper;
 
     public File storeFile(MultipartFile uploadedFile) {
 
         if (!isSupportedContentType(uploadedFile.getContentType())) {
-            throw new RuntimeException("Content type is not valid");
+            throw new FileTypeNotSupportedException("File type is not supported.");
         }
 
         if (uploadedFile.getSize() > 5242880) {
-            throw new RuntimeException("File exceeded size.");
+            throw new FileSizeLimitExceedException("Maximum file size exceeded.");
+        }
+
+        boolean fileIsPresent = fileRepository.existsByName(uploadedFile.getOriginalFilename());
+
+        if (fileIsPresent) {
+            throw new FileConflictException("File with " + uploadedFile.getOriginalFilename() + " already exists.");
         }
 
         File file = File.builder()
@@ -35,16 +46,6 @@ public class FileStorageService {
                 .extension(uploadedFile.getContentType())
                 .build();
 
-        boolean fileIsPresent = fileRepository.existsByName(file.getName());
-
-        if (fileIsPresent) {
-            try {
-                throw new FileUploadException("File with " + file.getName() + " already exists.");
-            } catch (FileUploadException e) {
-                e.printStackTrace();
-            }
-        }
-
         return fileRepository.save(file);
     }
 
@@ -52,8 +53,9 @@ public class FileStorageService {
         return fileRepository.findFileByName(fileName).getContent();
     }
 
-    public List<File> listAllFiles() {
-        return fileRepository.findAll();
+    public List<FileResponseModel> listAllFiles() {
+        List<File> files = fileRepository.findAll();
+        return fileResponseMapper.toFileResponseModel(files);
     }
 
     @Transactional
@@ -63,15 +65,17 @@ public class FileStorageService {
 
     private byte[] getFileContent(MultipartFile file) {
         byte[] fileContent = new byte[0];
+
         try {
             fileContent = file.getBytes();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new NoContentException("File doesn't have content");
         }
+
         return fileContent;
     }
 
-    public boolean isSupportedContentType(String contentType) {
+    private boolean isSupportedContentType(String contentType) {
         return contentType.equals("image/png")
                 || contentType.equals("image/jpeg")
                 || contentType.equals("image/jpg")

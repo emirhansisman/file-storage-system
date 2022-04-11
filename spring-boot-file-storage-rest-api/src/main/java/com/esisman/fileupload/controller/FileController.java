@@ -29,13 +29,8 @@ public class FileController {
             @ApiResponse(responseCode = "200", description = "Retrieved list of files' information successfully",
                     content = @Content) })
     @GetMapping
-    public ResponseEntity<List<FileResponseModel>> getFiles() {
-        List<File> files = fileStorageService.listAllFiles();
-        List<FileResponseModel> fileResponseModels = files.stream()
-                .map(this::convertToFileResponseModel)
-                .collect(Collectors.toList());
-
-        return new ResponseEntity(fileResponseModels, HttpStatus.OK);
+    public List<FileResponseModel> getFiles() {
+        return fileStorageService.listAllFiles();
     }
 
     @Operation(summary = "Get file content as byte array")
@@ -43,10 +38,8 @@ public class FileController {
             @ApiResponse(responseCode = "200", description = "Got file content as byte array",
                     content = @Content) })
     @GetMapping("/{fileName}/content")
-    public ResponseEntity<byte[]> getFileContent(@PathVariable String fileName) {
-        final byte[] fileContent = fileStorageService.getFileContent(fileName);
-
-        return new ResponseEntity(fileContent, HttpStatus.OK);
+    public byte[] getFileContent(@PathVariable String fileName) {
+        return fileStorageService.getFileContent(fileName);
     }
 
     @Operation(summary = "Upload file to server")
@@ -54,12 +47,8 @@ public class FileController {
             @ApiResponse(responseCode = "200", description = "File uploaded successfully",
                     content = @Content) })
     @PostMapping("/upload")
-    public ResponseEntity uploadFile(@RequestParam(name = "file") MultipartFile file) {
-        String fileName = file.getOriginalFilename();
-        final String fileDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/").path(fileName).toUriString();
-        final File uploadedFile = fileStorageService.storeFile(file);
-
-        return new ResponseEntity(HttpStatus.OK);
+    public void uploadFile(@RequestParam(name = "file") MultipartFile file) {
+        fileStorageService.storeFile(file);
     }
 
     @Operation(summary = "Delete file from server")
@@ -67,9 +56,7 @@ public class FileController {
             @ApiResponse(responseCode = "200", description = "File deleted successfully",
                     content = @Content) })
     @DeleteMapping("/{fileName}")
-    public ResponseEntity deleteFile(@PathVariable String fileName) {
+    public void deleteFile(@PathVariable String fileName) {
         fileStorageService.deleteFile(fileName);
-
-        return new ResponseEntity(HttpStatus.OK);
     }
 }
