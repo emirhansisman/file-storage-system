@@ -1,4 +1,4 @@
-# file-storage-system
+# Basic File Storage System
 File storage system to store and retrieve files through Spring Boot REST API and interact through React client
 
 ## Swagger
