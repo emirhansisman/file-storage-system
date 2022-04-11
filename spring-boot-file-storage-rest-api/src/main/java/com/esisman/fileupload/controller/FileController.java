@@ -72,14 +72,4 @@ public class FileController {
 
         return new ResponseEntity(HttpStatus.OK);
     }
-
-    private FileResponseModel convertToFileResponseModel(File file) {
-        FileResponseModel model = new FileResponseModel();
-        model.setName(file.getName());
-        model.setPath(file.getPath());
-        model.setSize(file.getSize());
-        model.setExtension(file.getExtension());
-
-        return model;
-    }
 }
