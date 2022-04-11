@@ -1,5 +1,6 @@
 # Basic File Storage System
-File storage system to store and retrieve files through Spring Boot REST API and interact through React client
+
+File storage system to store files into in-memory H2 database as blob, delete files and retrieve list of files through Spring Boot REST API endpoints or React client.
 
 ## Used Technologies
 
