@@ -29,7 +29,9 @@ public class FileController {
 
     @Operation(summary = "Get file content as byte array")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Got file content as byte array",
+            @ApiResponse(responseCode = "200", description = "File content returned as byte array",
+                    content = @Content),
+            @ApiResponse(responseCode = "204", description = "There is no file content",
                     content = @Content) })
     @GetMapping("/{fileName}/content")
     public byte[] getFileContent(@PathVariable String fileName) {
@@ -39,7 +41,14 @@ public class FileController {
     @Operation(summary = "Upload file to server")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "File uploaded successfully",
-                    content = @Content) })
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "File type is not supported",
+                    content = @Content),
+            @ApiResponse(responseCode = "422", description = "Maximum file upload size exceeded",
+                    content = @Content),
+            @ApiResponse(responseCode = "409", description = "File already exists",
+                    content = @Content)
+    })
     @PostMapping("/upload")
     public void uploadFile(@RequestParam(name = "file") MultipartFile file) {
         fileStorageService.storeFile(file);
